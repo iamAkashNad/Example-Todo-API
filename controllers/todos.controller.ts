@@ -3,7 +3,7 @@ import { RouteParams, RouterContext, State } from "https://deno.land/x/oak@v12.6
 import Todo from "../models/todo.model.ts";
 
 import { createResponse } from "../utils/create_response.util.ts";
-import { TodoParams } from "../utils/var_types.util.ts";
+import { TodoBody, TodoParams } from "../utils/var_types.util.ts";
 
 export const getTodos = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
   try {
@@ -25,5 +25,29 @@ export const getTodo = async (ctx: RouterContext<string, RouteParams<string>, St
     createResponse(ctx, 200, "Todo fetched Successfully!", { todo: todoDoc });
   } catch (_error) {
     createResponse(ctx, 500, "Something went wrong Internally!");
+  }
+};
+
+export const createTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+  let status: number | undefined;
+  try {
+    if(ctx.request.headers.get("Content-Type") !== "application/json") {
+      status = 400;
+      throw new Error("The request payload must be present and it should be of type json!");
+    }
+
+    const { text } = (await ctx.request.body().value) as TodoBody;
+
+    if(!text || typeof text !== "string" || !isNaN(+text) || text.trim().length < 5) {
+        status = 422;
+        throw new Error("Please enter a valid todo text and the text will be of minimum 5 characters long!");
+    }
+
+    const todo = new Todo(text.trim());
+    const savedTodo = await todo.save();
+
+    createResponse(ctx, 201, "Todo created Successfully!", { todo: savedTodo });
+  } catch (error) {
+    return createResponse(ctx, status || 500, status ? error.message : "Something went wrong Internally!");
   }
 };

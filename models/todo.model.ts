@@ -20,6 +20,14 @@ export default class Todo {
     } catch (_error) {
       return;
     }
-    return (await getDb().collection("todos").findOne({ _id: todoId }));
+    return await getDb().collection("todos").findOne({ _id: todoId });
+  }
+
+  async save() {
+    let result: ObjectId;
+    result = await getDb()
+      .collection("todos")
+      .insertOne({ text: this.text, createdAt: new Date() });
+    return (await new Todo("", result.toString()).findById())!;
   }
 }
