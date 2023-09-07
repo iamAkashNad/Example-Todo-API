@@ -31,16 +31,25 @@ export const getTodo = async (ctx: RouterContext<string, RouteParams<string>, St
 export const createTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
   let status: number | undefined;
   try {
-    if(ctx.request.headers.get("Content-Type") !== "application/json") {
+    if (ctx.request.headers.get("Content-Type") !== "application/json") {
       status = 400;
-      throw new Error("The request payload must be present and it should be of type json!");
+      throw new Error(
+        "The request payload must be present and it should be of type json!"
+      );
     }
 
     const { text } = (await ctx.request.body().value) as TodoBody;
 
-    if(!text || typeof text !== "string" || !isNaN(+text) || text.trim().length < 5) {
-        status = 422;
-        throw new Error("Please enter a valid todo text and the text will be of minimum 5 characters long!");
+    if (
+      !text ||
+      typeof text !== "string" ||
+      !isNaN(+text) ||
+      text.trim().length < 5
+    ) {
+      status = 422;
+      throw new Error(
+        "Please enter a valid todo text and the text will be of minimum 5 characters long!"
+      );
     }
 
     const todo = new Todo(text.trim());
@@ -48,6 +57,10 @@ export const createTodo = async (ctx: RouterContext<string, RouteParams<string>,
 
     createResponse(ctx, 201, "Todo created Successfully!", { todo: savedTodo });
   } catch (error) {
-    return createResponse(ctx, status || 500, status ? error.message : "Something went wrong Internally!");
+    return createResponse(
+      ctx,
+      status || 500,
+      status ? error.message : "Something went wrong Internally!"
+    );
   }
 };
