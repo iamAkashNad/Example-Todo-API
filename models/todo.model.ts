@@ -24,10 +24,17 @@ export default class Todo {
   }
 
   async save() {
-    let result: ObjectId;
-    result = await getDb()
-      .collection("todos")
-      .insertOne({ text: this.text, createdAt: new Date() });
-    return (await new Todo("", result.toString()).findById())!;
+    let todoId: ObjectId;
+    if (this.id) {
+      todoId = new ObjectId(this.id);
+      await getDb()
+        .collection("todos")
+        .updateOne({ _id: todoId }, { $set: { text: this.text } });
+    } else {
+      todoId = await getDb()
+        .collection("todos")
+        .insertOne({ text: this.text, createdAt: new Date() });
+    }
+    return (await new Todo("", todoId.toString()).findById())!;
   }
 }
