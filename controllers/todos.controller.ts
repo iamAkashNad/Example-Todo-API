@@ -1,11 +1,10 @@
-import { RouteParams, RouterContext, State } from "https://deno.land/x/oak@v12.6.1/mod.ts";
-
 import Todo from "../models/todo.model.ts";
 
 import { createResponse } from "../utils/create_response.util.ts";
-import { TodoBody, TodoParams } from "../utils/var_types.util.ts";
+import { TodoBody, TodoParams, numOrUndefined, OakRouterContext } from "../utils/var_types.util.ts";
+import { isBodyJson, isValidText } from "../validations/todo.validations.ts";
 
-export const getTodos = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+export const getTodos = async (ctx: OakRouterContext) => {
   try {
     const todos = await Todo.findAll();
     createResponse(ctx, 200, "All todos fetched Successfully!", { todos });
@@ -14,9 +13,7 @@ export const getTodos = async (ctx: RouterContext<string, RouteParams<string>, S
   }
 };
 
-export const getTodo = async (
-  ctx: RouterContext<string, RouteParams<string>, State>
-) => {
+export const getTodo = async (ctx: OakRouterContext) => {
   const { todoId } = ctx.params as unknown as TodoParams;
   try {
     const todo = new Todo("", todoId);
@@ -30,10 +27,10 @@ export const getTodo = async (
   }
 };
 
-export const createTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
-  let status: number | undefined;
+export const createTodo = async (ctx: OakRouterContext) => {
+  let status: numOrUndefined;
   try {
-    if (ctx.request.headers.get("Content-Type") !== "application/json") {
+    if (!isBodyJson(ctx)) {
       status = 400;
       throw new Error(
         "The request payload must be present and it should be of type json!"
@@ -42,12 +39,7 @@ export const createTodo = async (ctx: RouterContext<string, RouteParams<string>,
 
     const { text } = (await ctx.request.body().value) as TodoBody;
 
-    if (
-      !text ||
-      typeof text !== "string" ||
-      !isNaN(+text) ||
-      text.trim().length < 5
-    ) {
+    if (!isValidText(text)) {
       status = 422;
       throw new Error(
         "Please enter a valid todo text and the text will be of minimum 5 characters long!"
@@ -67,10 +59,10 @@ export const createTodo = async (ctx: RouterContext<string, RouteParams<string>,
   }
 };
 
-export const editTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+export const editTodo = async (ctx: OakRouterContext) => {
   const { todoId } = ctx.params as unknown as TodoParams;
 
-  let status: number | undefined;
+  let status: numOrUndefined;
   try {
     const todo = new Todo("", todoId);
     const todoDoc = await todo.findById();
@@ -80,7 +72,7 @@ export const editTodo = async (ctx: RouterContext<string, RouteParams<string>, S
       throw new Error("Todo not found for Editing!");
     }
 
-    if (ctx.request.headers.get("Content-Type") !== "application/json") {
+    if (!isBodyJson(ctx)) {
       status = 400;
       throw new Error(
         "The request payload must be present and it should be of type json!"
@@ -113,10 +105,10 @@ export const editTodo = async (ctx: RouterContext<string, RouteParams<string>, S
   }
 };
 
-export const deleteTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+export const deleteTodo = async (ctx: OakRouterContext) => {
   const { todoId } = ctx.params as unknown as TodoParams;
 
-  let status: number | undefined;
+  let status: numOrUndefined;
   try {
     const todo = new Todo("", todoId);
     const deletedCount = await todo.delete();
