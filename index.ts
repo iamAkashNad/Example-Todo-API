@@ -5,7 +5,11 @@ import { connect } from "./data/database.ts";
 
 import todosRouter from "./routes/todos.routes.ts";
 
+import cors from "./middlewares/cors.middleware.ts";
+
 const app = new Application();
+
+app.use(cors);
 
 app.use(todosRouter.routes());
 app.use(todosRouter.allowedMethods());
