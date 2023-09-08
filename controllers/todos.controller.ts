@@ -14,7 +14,9 @@ export const getTodos = async (ctx: RouterContext<string, RouteParams<string>, S
   }
 };
 
-export const getTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+export const getTodo = async (
+  ctx: RouterContext<string, RouteParams<string>, State>
+) => {
   const { todoId } = ctx.params as unknown as TodoParams;
   try {
     const todo = new Todo("", todoId);
@@ -102,6 +104,29 @@ export const editTodo = async (ctx: RouterContext<string, RouteParams<string>, S
     todo.text = text.trim();
     const savedTodo = await todo.save();
     createResponse(ctx, 200, "Todo updated Successfully!", { todo: savedTodo });
+  } catch (error) {
+    createResponse(
+      ctx,
+      status || 500,
+      status ? error.message : "Something went wrong Internally!"
+    );
+  }
+};
+
+export const deleteTodo = async (ctx: RouterContext<string, RouteParams<string>, State>) => {
+  const { todoId } = ctx.params as unknown as TodoParams;
+
+  let status: number | undefined;
+  try {
+    const todo = new Todo("", todoId);
+    const deletedCount = await todo.delete();
+
+    if (deletedCount === 0) {
+      status = 404;
+      throw new Error("Todo not found for Deletion!");
+    }
+
+    createResponse(ctx, 200, "Todo deleted Successfully!");
   } catch (error) {
     createResponse(
       ctx,

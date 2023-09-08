@@ -37,4 +37,14 @@ export default class Todo {
     }
     return (await new Todo("", todoId.toString()).findById())!;
   }
+
+  async delete() {
+    let todoId: ObjectId;
+    try {
+      todoId = new ObjectId(this.id);
+    } catch (_error) {
+      return 0;
+    }
+    return await getDb().collection("todos").deleteOne({ _id: todoId });
+  }
 }
