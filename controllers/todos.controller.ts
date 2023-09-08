@@ -81,12 +81,7 @@ export const editTodo = async (ctx: OakRouterContext) => {
 
     const { text } = (await ctx.request.body().value) as TodoBody;
 
-    if (
-      !text ||
-      typeof text !== "string" ||
-      !isNaN(+text) ||
-      text.trim().length < 5
-    ) {
+    if (!isValidText(text)) {
       status = 422;
       throw new Error(
         "Please enter a valid todo text and the text will be of minimum 5 characters long!"
